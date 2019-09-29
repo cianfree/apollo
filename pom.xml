@@ -109,7 +109,8 @@
 		<module>apollo-demo</module>
 		<module>apollo-mockserver</module>
 		<module>apollo-openapi</module>
-	</modules>
+        <module>apollo-client-spring-boot-starter</module>
+    </modules>
 
 	<dependencyManagement>
 		<dependencies>
@@ -994,12 +995,12 @@
 	</reporting>
 	<distributionManagement>
 		<repository>
-			<id>releases</id>
-			<url>${releases.repo}</url>
+			<id>${release.id}</id>
+			<url>${release.repo}</url>
 		</repository>
 		<snapshotRepository>
-			<id>snapshots</id>
-			<url>${snapshots.repo}</url>
+			<id>${snapshot.id}</id>
+			<url>${snapshot.repo}</url>
 		</snapshotRepository>
 	</distributionManagement>
 </project>

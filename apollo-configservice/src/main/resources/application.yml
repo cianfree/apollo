@@ -2,13 +2,27 @@ spring:
   application:
     name: apollo-configservice
   profiles:
-    active: ${apollo_profile}
+    active: ${apollo_profile:local}
+  jpa:
+    hibernate:
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
 
 ctrip:
   appid: 100003171
 
 server:
-  port: 8080
+  port: ${server_port:8081}
 
 logging:
-  file: /opt/logs/100003171/apollo-configservice.log
+  file: ${log_path:/data/log/apollo-configservice.log}
+
+eureka:
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.cloud.client.ipAddress:${spring.cloud.client.ip-address}}:${spring.application.name}:${server.port}
+    default-home-page-url: http://${spring.cloud.client.ipAddress:${spring.cloud.client.ip-address}}:${server.port}
+    # 提供给客户端使用的请求地址，即当别的服务要使用本服务的时候，从eureka发现服务的时候，会拿什么地址去访问的问题，默认是会拿到具体的HTTP://IP:PORT
+    # 有个情况就是，如果我们有开发环境的配置，但是部署 configservice 的机器我们在开发环境下是访问不到的，那么我们通常会给开发环境的 configservice 提供一个域名访问服务
+    # 然后部署 configservice 开发环境的时候，就配置一个 eureka_home_page_url ，使用具体的域名
+    home-page-url: ${eureka_home_page_url:${eureka.instance.default-home-page-url}}

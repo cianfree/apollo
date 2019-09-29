@@ -8,7 +8,12 @@ import com.ctrip.framework.apollo.spring.config.PropertySourcesConstants;
 import com.ctrip.framework.apollo.spring.util.SpringInjector;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
+
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
@@ -60,8 +65,18 @@ public class ApolloApplicationContextInitializer implements
 
   private static final Logger logger = LoggerFactory.getLogger(ApolloApplicationContextInitializer.class);
   private static final Splitter NAMESPACE_SPLITTER = Splitter.on(",").omitEmptyStrings().trimResults();
-  private static final String[] APOLLO_SYSTEM_PROPERTIES = {"app.id", ConfigConsts.APOLLO_CLUSTER_KEY,
-      "apollo.cacheDir", ConfigConsts.APOLLO_META_KEY};
+
+  private static final Map<String, String[]> APOLLO_SYSTEM_PROPERTIES_MAP = new HashMap<>();
+
+  static {
+    APOLLO_SYSTEM_PROPERTIES_MAP.put("app.id", new String[]{"apollo.app.id", "apollo.appId", "app.id"});
+    APOLLO_SYSTEM_PROPERTIES_MAP.put("env", new String[]{"apollo.env"});
+    APOLLO_SYSTEM_PROPERTIES_MAP.put(ConfigConsts.APOLLO_CLUSTER_KEY, new String[]{ConfigConsts.APOLLO_CLUSTER_KEY});
+    APOLLO_SYSTEM_PROPERTIES_MAP.put("apollo.cacheDir", new String[]{"apollo.cacheDir"});
+    APOLLO_SYSTEM_PROPERTIES_MAP.put(ConfigConsts.APOLLO_META_KEY, new String[]{ConfigConsts.APOLLO_META_KEY});
+  }
+
+  private static AtomicInteger initializeEntranceTimes = new AtomicInteger(0);
 
   private final ConfigPropertySourceFactory configPropertySourceFactory = SpringInjector
       .getInstance(ConfigPropertySourceFactory.class);
@@ -71,9 +86,10 @@ public class ApolloApplicationContextInitializer implements
   @Override
   public void initialize(ConfigurableApplicationContext context) {
     ConfigurableEnvironment environment = context.getEnvironment();
+    int entranceTimes = initializeEntranceTimes.incrementAndGet();
 
-    String enabled = environment.getProperty(PropertySourcesConstants.APOLLO_BOOTSTRAP_ENABLED, "false");
-    if (!Boolean.valueOf(enabled)) {
+    String enabled = environment.getProperty(PropertySourcesConstants.APOLLO_BOOTSTRAP_ENABLED, String.valueOf(ConfigConsts.DEFAULT_APOLLO_BOOTSTRAP_ENABLED));
+    if (!Boolean.valueOf(enabled) || entranceTimes < 2) {
       logger.debug("Apollo bootstrap config is not enabled for context {}, see property: ${{}}", context, PropertySourcesConstants.APOLLO_BOOTSTRAP_ENABLED);
       return;
     }
@@ -113,23 +129,40 @@ public class ApolloApplicationContextInitializer implements
    * To fill system properties from environment config
    */
   void initializeSystemProperty(ConfigurableEnvironment environment) {
-    for (String propertyName : APOLLO_SYSTEM_PROPERTIES) {
-      fillSystemPropertyFromEnvironment(environment, propertyName);
+    for (Map.Entry<String, String[]> entry : APOLLO_SYSTEM_PROPERTIES_MAP.entrySet()) {
+      String[] keys = entry.getValue();
+      String finalKey = entry.getKey();
+
+      for (String key : keys) {
+        if (fillSystemPropertyFromEnvironment(environment, key, finalKey)) {
+          break;
+        }
+      }
     }
+
+//    for (String propertyName : APOLLO_SYSTEM_PROPERTIES) {
+//      fillSystemPropertyFromEnvironment(environment, propertyName);
+//    }
   }
 
-  private void fillSystemPropertyFromEnvironment(ConfigurableEnvironment environment, String propertyName) {
+  private boolean fillSystemPropertyFromEnvironment(ConfigurableEnvironment environment, String propertyName, String finalKey) {
+
+    if (finalKey == null) {
+      finalKey = propertyName;
+    }
+
     if (System.getProperty(propertyName) != null) {
-      return;
+      return false;
     }
 
     String propertyValue = environment.getProperty(propertyName);
 
     if (Strings.isNullOrEmpty(propertyValue)) {
-      return;
+      return false;
     }
 
-    System.setProperty(propertyName, propertyValue);
+    System.setProperty(finalKey, propertyValue);
+    return true;
   }
 
   /**
@@ -157,7 +190,7 @@ public class ApolloApplicationContextInitializer implements
       return;
     }
 
-    Boolean bootstrapEnabled = configurableEnvironment.getProperty(PropertySourcesConstants.APOLLO_BOOTSTRAP_ENABLED, Boolean.class, false);
+    Boolean bootstrapEnabled = configurableEnvironment.getProperty(PropertySourcesConstants.APOLLO_BOOTSTRAP_ENABLED, Boolean.class, ConfigConsts.DEFAULT_APOLLO_BOOTSTRAP_ENABLED);
 
     if (bootstrapEnabled) {
       initialize(configurableEnvironment);

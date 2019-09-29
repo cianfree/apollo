@@ -1,0 +1,48 @@
+{
+  "properties": [
+    {
+      "name": "apollo.appId",
+      "type": "java.lang.String",
+      "description": "Apollo 配置中心 APPID."
+    },
+    {
+      "name": "apollo.env",
+      "type": "java.lang.String",
+      "description": "Apollo 配置中心 应用的环境."
+    },
+    {
+      "name": "apollo.cluster",
+      "type": "java.lang.String",
+      "description": "Apollo apollo.cluster 配置项,集群配置，即当前环境使用什么集群的配置，默认是没有集群的，需要管理后台配置集群，通常是不同机房或数据中心才需要集群概念."
+    },
+    {
+      "name": "apollo.meta",
+      "type": "java.lang.String",
+      "description": "Apollo 对应当前部署环境的 ConfigService meta."
+    },
+    {
+      "name": "apollo.cacheDir",
+      "type": "java.lang.String",
+      "description": "Apollo 本地缓存配置目录,windows默认是/data/${app.id}, linux默认是 /data/apollo/${app.id}."
+    },
+    {
+      "name": "apollo.bootstrap.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Apollo 启动是否开启加到PropertySources中去.",
+      "defaultValue": true
+    },
+    {
+      "name": "apollo.bootstrap.eagerLoad.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Apollo 启动配置是否饿汉模式加载.",
+      "defaultValue": false
+    },
+    {
+      "name": "apollo.bootstrap.namespaces",
+      "type": "java.lang.String[]",
+      "description": "Apollo bootstrap namespaces, 英文逗号分隔.",
+      "defaultValue": "application"
+    }
+  ]
+}
+

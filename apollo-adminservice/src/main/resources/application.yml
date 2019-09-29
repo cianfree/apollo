@@ -2,13 +2,27 @@ spring:
   application:
     name: apollo-adminservice
   profiles:
-    active: ${apollo_profile}
+    active: ${apollo_profile:local}
+  jpa:
+    hibernate:
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
 
 ctrip:
   appid: 100003172
   
 server:
-  port: 8090
+  port: ${server_port:8090}
   
 logging:
-  file: /opt/logs/100003172/apollo-adminservice.log
+  file: ${log_path:/data/log/apollo-adminservice.log}
+
+eureka:
+  instance:
+    prefer-ip-address: true
+    instance-id: ${spring.cloud.client.ipAddress:${spring.cloud.client.ip-address}}:${spring.application.name}:${server.port}
+  self:
+    url: http://${eureka.instance.hostname}:${server.port}/eureka/
+  service:
+    url: ${eureka_url:${eureka.self.url}}
+

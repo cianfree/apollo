@@ -21,6 +21,8 @@ public final class EnvUtils {
         return Env.PRO;
       case "DEV":
         return Env.DEV;
+      case "TEST":
+        return Env.TEST;
       case "LOCAL":
         return Env.LOCAL;
       case "TOOLS":
